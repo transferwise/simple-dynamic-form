@@ -65,6 +65,14 @@ const serveForm = (bodyBuffer, response) => {
                 type: 'text',
             });
         }
+
+        if (body.isHappy === 'no') {
+            data.form.push({
+                key: 'reason',
+                name: 'Why are you not happy?',
+                type: 'text',
+            });
+        }
         
         sendJsonResponse(data, 200, response);
     } catch (error) {
@@ -87,7 +95,7 @@ const serveSubmit = (bodyBuffer, response) => {
         if (isHappy == null || isHappy === '') {
             missingFields.push('isHappy');
         }
-        if (isHappy === 'yes' && (reason == null || reason === '')) {
+        if (reason == null || reason === '') {
             missingFields.push('reason');
         }
         if (missingFields.length > 0) {
@@ -108,6 +116,13 @@ const serveSubmit = (bodyBuffer, response) => {
             }, 400, response);
             return;
         }
+
+        // Print and Log
+        console.log(`Customer Name: ${customerName || 'NULL'}`)
+        console.log(`Is Happy: ${isHappy || 'NULL'}`)
+        console.log(`Reason: ${reason || 'NULL'}`)
+        console.log('---');
+        
 
         sendJsonResponse(body, 200, response);
     } catch (error) {

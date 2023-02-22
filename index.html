@@ -1,1 +1,161 @@
-hello
+<html>
+    <head>
+        <title>Simple Dynamic Form</title>
+        <style>
+            #form-container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            label {
+                margin-top: 16px;
+            }
+
+            button {
+                margin-top: 32px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Simple Dynamic Form</h1>
+        <div id="form-container"></div>
+        <button onclick="submitForm()">Submit</button>
+    </body>
+
+    <script>
+const formData = {};
+
+// Debouncer
+let textDebounceId = 0;
+function debounceAndRefresh() {
+    const timeoutId = new Date().getTime();
+    textDebounceId = timeoutId;
+    setTimeout(() => {
+        if (textDebounceId === timeoutId) {
+            refreshForm(formData);
+        }
+    }, 2000);
+}
+
+function waitForReady(callback) {
+  /in/.test(document.readyState) ? setTimeout('waitForReady('+callback+')', 9) : callback();
+};
+
+
+
+function refreshForm() {
+    return fetch('/form', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData),
+    })
+        .then((response) => response.json())
+        .then(data => populateForm(data.form));
+}
+
+function submitForm() {
+    return fetch('/submit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData),
+    })
+        .then((response) => {
+            if (response.status == 200) {
+                alert('Form submitted successfully');
+            } else {
+                console.error(response.json());
+                alert('Error when submitting form');
+            }
+        });
+}
+
+function populateForm(dynamicForm) {
+    const formElement = document.getElementById('form-container');
+
+    formElement.innerText = '';
+    for (let i = 0; i < dynamicForm.length; i += 1) {
+        const dynamicField = dynamicForm[i];
+
+        // Label
+        const labelElement = createLabel(dynamicField.name);
+        formElement.appendChild(labelElement);
+
+        // Field
+        const fieldElement = createField(dynamicField);
+        formElement.appendChild(fieldElement);
+    }
+}
+
+function createLabel(text) {
+    const label = document.createElement('label');
+    label.innerText = text;
+    return label;
+}
+
+function createField(dynamicField) {
+    if (dynamicField.type === 'text') {
+        // Text Field
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.id = dynamicField.key;
+        textInput.name = dynamicField.key;
+        textInput.value = formData[dynamicField.key] || '';
+
+        textInput.oninput = e => {
+            formData[dynamicField.key] = e.target.value;
+            debounceAndRefresh();
+        }
+
+        return textInput;
+    } else if (dynamicField.type === 'select') {
+        // Select Field (dropdown)
+        const selectInput = document.createElement('select');
+        selectInput.id = dynamicField.key;
+        selectInput.name = dynamicField.key;
+        selectInput.value = formData[dynamicField.key];
+
+        // When not selected, select an empty disabled option
+        if (formData[dynamicField.key] == null) {
+            const blankOption = document.createElement('option');
+            blankOption.disabled = true;
+            blankOption.selected = true;
+
+            selectInput.appendChild(blankOption);
+        }
+
+        // All other values
+        const availableValues = dynamicField.values;
+        for (let i = 0; i < availableValues.length; i += 1) {
+            const availableValue = availableValues[i];
+            const option = document.createElement('option');
+            option.id = availableValue.key;
+            option.value = availableValue.key;
+            option.innerText = availableValue.name;
+            option.selected = formData[dynamicField.key] === availableValue.key;
+
+            selectInput.appendChild(option);
+        }
+
+        selectInput.onchange = e => {
+            formData[dynamicField.key] = e.target.value;
+            refreshForm();
+        }
+
+        return selectInput;
+    } else {
+        throw new Error(`Invalid field type ${dynamicField.type}`);
+    }
+}
+
+
+waitForReady(() => {
+    console.log('Ready');
+    refreshForm();
+});
+    </script>
+</html>
