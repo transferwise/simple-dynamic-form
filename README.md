@@ -12,4 +12,5 @@ fs - To serve the `index.html` file
 3. In your browser, go to `http://localhost:8080`
 
 # Demo
-![demo video](https://github.com/transferwise/simple-dynamic-form/blob/master/demo.mov?raw=true)
+https://user-images.githubusercontent.com/7065141/220569386-8c9a984c-5ce9-4c3d-b6ac-dc6a69de1485.mov
+
